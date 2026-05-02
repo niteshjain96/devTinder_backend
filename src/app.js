@@ -3,6 +3,7 @@ const dotenv=require('dotenv')
 const connectDB=require('./config/database')
 const User=require('./models/User');
 const app=express();
+app.use(express.json());
 dotenv.config();
 const {adminAuth}=require('./middlewares/auth');
 
@@ -96,13 +97,28 @@ connectDB().then(()=>{
 })
 
 
+// app.post('/signup',async(req,res)=>{
+//     const user=new User({
+//         firstName:'Nitesh',
+//         lastName:'Jain',
+//         emailId:'nitesh@gmail.com',
+//         password:'nitesh12345'
+//     })
+//     await user.save();
+//     res.send('User Addedd successfully')
+// })
+
+// app.post('/signup',(req,res)=>{
+//     console.log(req.body);
+// })
+
 app.post('/signup',async(req,res)=>{
-    const user=new User({
-        firstName:'Nitesh',
-        lastName:'Jain',
-        emailId:'nitesh@gmail.com',
-        password:'nitesh12345'
-    })
-    await user.save();
+    const user=new User(req.body)
+    try {
+        await user.save();
     res.send('User Addedd successfully')
+        
+    } catch (error) {
+        res.send('User not added');        
+    }
 })
