@@ -112,6 +112,7 @@ connectDB().then(()=>{
 //     console.log(req.body);
 // })
 
+//signup
 app.post('/signup',async(req,res)=>{
     const user=new User(req.body)
     try {
@@ -122,3 +123,61 @@ app.post('/signup',async(req,res)=>{
         res.send('User not added');        
     }
 })
+
+// get user
+app.get('/user',async(req,res)=>{
+    const userEmail=req.body.emailId;
+    try{
+        const users=await User.find({emailId:userEmail});
+        if(users.length==0){
+            res.status(404).send('User Not found')
+        }
+        else{
+            res.send(users);
+        }
+    }
+    catch(err){
+        res.status(400).send('Something went wrong');
+    }
+
+})
+
+// feed api
+
+app.get('/feed',async(req,res)=>{
+    try{
+        const users=await User.find({});
+        res.send(users);
+    }
+    catch(err){ 
+        res.status(400).send('somethign went wrong')
+    }
+})
+
+app.delete('/user',async(req,res)=>{
+    const emailId=req.body.emailId;
+    try{
+        const users=await User.findOneAndDelete({emailId});
+        if(!users){
+            res.status(200).send('No User found');
+        }
+        res.send('User Delete Successfully')
+    }
+    catch(err){
+        res.status(400).send('Something qwent wrong');
+    }
+})
+
+// update data of user
+app.patch('/user',async(req,res)=>{
+    const userId=req.body.userId;
+    const data=req.body;
+    try {
+        const user=await User.findByIdAndUpdate({_id:userId},data);
+        console.log(user);
+        res.send('User Updated successfully');
+    } catch (error) {
+        res.status(400).send('Something went wrong');
+    }
+})
+
