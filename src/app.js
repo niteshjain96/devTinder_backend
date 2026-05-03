@@ -1,8 +1,13 @@
 const express=require('express');
 const dotenv=require('dotenv')
+const cors = require('cors');
 const connectDB=require('./config/database')
 const User=require('./models/User');
 const app=express();
+app.use(cors({
+  origin: 'http://localhost:5173', 
+  credentials: true                
+}));
 app.use(express.json());
 dotenv.config();
 const {adminAuth}=require('./middlewares/auth');
@@ -181,3 +186,27 @@ app.patch('/user',async(req,res)=>{
     }
 })
 
+
+// login user
+app.post('/login', async (req, res) => {
+    const { emailId, password } = req.body;
+    try {
+        // 1. Check if user exists
+        const user = await User.findOne({ emailId });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // 2. Compare password
+        if (user.password !== password) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // 3. Send response
+        res.status(200).json({ message: 'Login successful', user });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
