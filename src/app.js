@@ -1,6 +1,7 @@
 const express=require('express');
 const dotenv=require('dotenv')
 const cors = require('cors');
+const bcrypt=require('bcrypt');
 const connectDB=require('./config/database')
 const User=require('./models/User');
 const app=express();
@@ -11,6 +12,7 @@ app.use(cors({
 app.use(express.json());
 dotenv.config();
 const {adminAuth}=require('./middlewares/auth');
+const { ValidateSignUpData } = require('./utils/validation');
 
 // app.use('/admin',adminAuth);
 
@@ -119,10 +121,17 @@ connectDB().then(()=>{
 
 //signup
 app.post('/signup',async(req,res)=>{
-    const user=new User(req.body)
+    // const user=new User(req.body)
     try {
+        ValidateSignUpData(req);
+        const {firstName,lastName,emailId,password}=req.body;
+        // Encrypt password
+        // console.log(password);
+        const passwordHash=await bcrypt.hash(password,10);
+        // console.log(passwordHash);
+        // await user.save();
+        const user=new User({firstName,lastName,emailId,password:passwordHash});
         await user.save();
-        
         res.send('User Addedd successfully')
         
     } catch (error) {
@@ -205,14 +214,18 @@ app.post('/login', async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-
+        const ispasswordValid=await bcrypt.compare(password,user.password);
         // 2. Compare password
-        if (user.password !== password) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+
+        // if (user.password !== password) {
+        //     return res.status(401).json({ message: 'Invalid credentials' });
+        // }
+        if(ispasswordValid){
+            res.send('Login successful');
         }
 
         // 3. Send response
-        res.status(200).json({ message: 'Login successful', user });
+        // res.status(200).json({ message: 'Login successful', user });
 
     } catch (error) {
         console.error(error);
