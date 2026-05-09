@@ -122,10 +122,11 @@ app.post('/signup',async(req,res)=>{
     const user=new User(req.body)
     try {
         await user.save();
-    res.send('User Addedd successfully')
+        
+        res.send('User Addedd successfully')
         
     } catch (error) {
-        res.send('User not added');        
+        res.send(error.message);        
     }
 })
 
@@ -174,15 +175,23 @@ app.delete('/user',async(req,res)=>{
 })
 
 // update data of user
-app.patch('/user',async(req,res)=>{
-    const userId=req.body.userId;
+app.patch('/user/:userId',async(req,res)=>{
+    const userId=req.params?.userId;
     const data=req.body;
+    
     try {
-        const user=await User.findByIdAndUpdate({_id:userId},data);
-        console.log(user);
+        const allowed_Updates=["photoUrl","gender","about","age","skills"];
+        const isUpdateAllowed=Object.keys(data).every((k)=>allowed_Updates.includes(k));
+        if(!isUpdateAllowed){
+            throw new Error("Upate not allowed");
+        }
+        if(data?.skills && data.skills.length > 10){
+            throw new Error("Skills cannot be more than 10");
+        }
+        const user=await User.findByIdAndUpdate({_id:userId},data,{ runValidators: true });
         res.send('User Updated successfully');
     } catch (error) {
-        res.status(400).send('Something went wrong');
+        res.status(400).send(error.message);
     }
 })
 
